@@ -54,5 +54,3 @@ Das Ziel des Projekts ist die Entwicklung eines Roboters **JOJO**, der Menschen 
 - **Aktivierung:** Der Sprachbefehl **"Jojo"** aktiviert die Sprachsteuerung.
 - **Interaktion:** Der Roboter kommuniziert mithilfe eines **Gemini-AI-API-Keys**.
 - **Gesichtserkennung:** Die AI erkennt **bekannte Gesichter** und kann sie benennen, basierend auf bereits gespeicherten Fotos der Person.
-
----
