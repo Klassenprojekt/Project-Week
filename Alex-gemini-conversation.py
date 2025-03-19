@@ -4,7 +4,7 @@ import queue
 import vosk
 import requests
 import json
-from gtts import gTTS
+from gtts import gTTS   
 import tempfile
 import pygame
 import threading
