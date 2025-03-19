@@ -313,3 +313,5 @@ if __name__ == "__main__":
         print("Falling back to text mode...")
     finally:
         cleanup()
+
+        
