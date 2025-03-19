@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
+
 # Gemini API configuration
 API_KEY = os.getenv('API_KEY')
 if not API_KEY:
