@@ -405,6 +405,8 @@ def process_single_camera(device_path):
         return matches
     except Exception:
         return []
+    
+    
 
 def print_performance_stats():
     """Gibt Performance-Statistiken aus"""
