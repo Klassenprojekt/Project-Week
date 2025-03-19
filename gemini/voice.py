@@ -14,9 +14,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Gemini API configuration
-API_KEY = os.getenv('AIzaSyBo6NuG90H-FfdPpetru749VCn78Akvt6g')
+API_KEY = os.getenv('API_KEY')
 if not API_KEY:
-    API_KEY = "AIzaSyBo6NuG90H-FfdPpetru749VCn78Akvt6g"  # Replace with your API key if not using .env
+    API_KEY = "API_KEY"  # Replace with your API key if not using .env
 
 GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={API_KEY}"
 SYSTEM_PROMPT = "You are a helpful robot assistant in a program designed for conversational interaction. Avoid using text formatting like markdown, hyphens, or asterisks as your responses will be spoken aloud. Keep responses concise and natural. The user says:"
@@ -169,4 +169,4 @@ if __name__ == "__main__":
         print("Falling back to text mode...")
 
 
-        
+
