@@ -2,12 +2,11 @@ import os
 import sounddevice as sd
 import queue
 import vosk
-import requests  
+import requests
 import json
 from gtts import gTTS
-import tempfile  
+import tempfile
 import pygame
-import threading
 from time import sleep
 from dotenv import load_dotenv
 
@@ -23,7 +22,7 @@ GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.
 SYSTEM_PROMPT = "You are a helpful robot assistant in a program designed for conversational interaction. Avoid using text formatting like markdown, hyphens, or asterisks as your responses will be spoken aloud. Keep responses concise and natural. The user says:"
 
 # Voice recognition configuration
-model_path = "../vosk-model-en-us-0.22"  # Update path to Vosk model
+model_path = r"C:\Users\Laptop-Alex\Downloads\vosk-model-en-us-0.22\vosk-model-en-us-0.22"  # Passe den Pfad an
 activation_word = input("Enter the activation word (default: 'hello'): ") or "hello"
 
 # Initialisations
@@ -62,10 +61,9 @@ def speak(text):
     finally:
         is_speaking = False
         pygame.mixer.music.stop()
-        pygame.mixer.music.unload()  # Datei entladen, um sie freizugeben
-        sleep(0.5)  # Kurze Verzögerung, um sicherzustellen, dass die Datei nicht mehr gesperrt ist
-        os.remove(temp_filename)  # Datei löschen
-
+        pygame.mixer.music.unload()  # Unload the file to free resources
+        sleep(0.5)  # Brief delay to ensure file is not locked
+        os.remove(temp_filename)  # Remove the temporary file
 
 def callback(indata, frames, time, status):
     """Callback for audio stream to put audio data in queue"""
@@ -75,15 +73,15 @@ def listen_for_activation():
     """Listen for the activation word"""
     global activation_detected, stop_playback
     with sd.RawInputStream(samplerate=16000, blocksize=8000, dtype="int16", channels=1, callback=callback):
-        print("Listening for activation word...")  # Debugging message
+        print("Listening for activation word...")
         while True:
             data = audio_queue.get()
             if recognizer.AcceptWaveform(data):
                 result = json.loads(recognizer.Result())
                 text = result.get("text", "").lower()
-                print(f"Recognized text: {text}")  # Debugging message
+                print(f"Recognized text: {text}")
                 if activation_word in text:
-                    print(f"Activation word '{activation_word}' detected.")  # Debugging message
+                    print(f"Activation word '{activation_word}' detected.")
                     if is_speaking:
                         stop_playback = True
                         activation_detected = False
@@ -93,8 +91,12 @@ def listen_for_activation():
 
 def record_command():
     """Record and transcribe user command after activation"""
+    # Flush the audio queue before recording a new command
+    while not audio_queue.empty():
+        audio_queue.get()
+        
     with sd.RawInputStream(samplerate=16000, blocksize=8000, dtype="int16", channels=1, callback=callback):
-        print("Listening...")  # Debugging message
+        print("Listening...")
         while True:
             data = audio_queue.get()
             if recognizer.AcceptWaveform(data):
@@ -130,36 +132,34 @@ def query_gemini(prompt):
         return "Sorry, I couldn't process that request."
 
 def main_loop():
-    """Main program loop"""
-    global activation_detected, stop_playback
-    print(f"Voice-enabled Gemini Chat started. Say the activation word '{activation_word}' to begin.")
-
-    # First, wait for activation word
-    listen_for_activation()  # Wartet, bis Aktivierungswort erkannt wird
-    speak("Yes?")
-
+    """Main program loop with support for starting a new conversation on 'stop'"""
+    global activation_detected, stop_playback, chat_history
     while True:
-        # Start listening for user input (no activation word needed now)
-        user_input = record_command()  # Benutzerbefehl aufzeichnen
-        if user_input.lower() == "stop":
-            speak("Okay, stopping the conversation.")
-            break  # Wenn 'stop' gesagt wird, beenden wir den Chat
+        # Outer loop: wait for activation word to start a new conversation session
+        print(f"Voice-enabled Gemini Chat started. Say the activation word '{activation_word}' to begin.")
+        listen_for_activation()
+        speak("Yes?")
+        
+        # Inner loop: handle conversation until the user says "stop"
+        while True:
+            user_input = record_command()
+            print("User:", user_input)
+            
+            # If the user says "stop", clear history and break out of the inner loop
+            if "stop" in user_input.lower():
+                speak("Okay, stopping the conversation. Starting a new conversation.")
+                print("Command 'stop' detected. Resetting conversation.")
+                chat_history.clear()
+                break
 
-        print("User:", user_input)
+            response = query_gemini(user_input)
+            print("AI:", response)
+            speak(response)
 
-        # Send the user input to Gemini API and get response
-        response = query_gemini(user_input)
-        print("AI:", response)
-
-        # Speak the response
-        speak(response)
-
-        # Optionally, break loop after certain condition or continue.
-        # In this case, we loop until user says "stop".
+            print("Waiting for next command. Say 'stop' to end conversation.")
 
 if __name__ == "__main__":
     try:
-        # Start the main loop directly
         main_loop()
     except KeyboardInterrupt:
         pygame.mixer.quit()
